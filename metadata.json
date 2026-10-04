@@ -1,6 +1,6 @@
 {
   "name": "NEON HOCKEY: CHARACTER ARENA",
-  "description": "個性豊かなキャラクターたちと挑むサイバーネオン・エアホッケーアーケード。1vs1や白熱の2vs2タッグバトル、カオスなダブルパックなど多彩なモードを搭載。",
+  "description": "個性豊かな18人のキャラクターと挑む本格サイバーネオン・エアホッケーアーケード。1vs1や白熱の2vs2タッグバトル、カオスなマルチボールやビリヤード・カーリングモードも搭載。",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

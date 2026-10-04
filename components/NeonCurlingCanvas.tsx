@@ -164,18 +164,35 @@ export default function NeonCurlingCanvas({
     startTime: 0,
   });
 
-  // Trigger speech helper
+  // Trigger speech helper - Enhanced with Curling specific voice lines!
   const triggerSpeech = useCallback(
-    (charId: string, type: 'start' | 'goalScored' | 'goalConceded') => {
+    (charId: string, type: 'start' | 'goalScored' | 'goalConceded' | 'curling') => {
       const char = GET_CHARACTER_BY_ID(charId);
-      const quotes = char.quotes[type];
-      if (!quotes || quotes.length === 0) return;
-      const quote = quotes[Math.floor(Math.random() * quotes.length)];
+      let pool: string[] = [];
+      if (type === 'curling') {
+        pool = char.quotes.curling && char.quotes.curling.length > 0 ? char.quotes.curling : (char.quotes.goalScored || []);
+      } else if (type === 'goalScored') {
+        if (char.quotes.curling && char.quotes.curling.length > 0 && Math.random() < 0.65) {
+          pool = char.quotes.curling;
+        } else {
+          pool = char.quotes.goalScored || [];
+        }
+      } else if (type === 'start') {
+        if (char.quotes.curling && char.quotes.curling.length > 0 && Math.random() < 0.5) {
+          pool = char.quotes.curling;
+        } else {
+          pool = char.quotes.start || [];
+        }
+      } else {
+        pool = char.quotes[type] || [];
+      }
+      if (!pool || pool.length === 0) return;
+      const quote = pool[Math.floor(Math.random() * pool.length)];
       onSpeechRef.current({
         id: `speech-${Date.now()}-${Math.random()}`,
         character: char,
         text: quote,
-        timeRemaining: 3200,
+        timeRemaining: 3400,
         isAlly: charId === config.allyId,
       });
     },

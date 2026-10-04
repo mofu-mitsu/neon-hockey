@@ -128,18 +128,18 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#141232] via-[#090d1f] to-[#040612] text-slate-100 flex flex-col selection:bg-cyan-500/30 relative overflow-x-hidden">
-      {/* Ambient cyber neon glow spots */}
-      <div className="fixed -top-40 -left-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[128px] pointer-events-none -z-10" />
-      <div className="fixed top-1/3 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-[128px] pointer-events-none -z-10" />
-      <div className="fixed -bottom-40 left-1/3 w-96 h-96 bg-rose-500/10 rounded-full blur-[128px] pointer-events-none -z-10" />
+    <div className="min-h-screen bg-gradient-to-b from-[#16113b] via-[#080b1d] to-[#02030a] text-slate-100 flex flex-col selection:bg-cyan-500/40 relative overflow-x-hidden cyber-grid">
+      {/* Ambient cyber neon glow spots with enhanced vivid saturation */}
+      <div className="fixed -top-32 -left-32 w-[32rem] h-[32rem] bg-cyan-400/20 rounded-full blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed top-1/4 -right-32 w-[30rem] h-[30rem] bg-fuchsia-500/20 rounded-full blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed -bottom-32 left-1/4 w-[36rem] h-[36rem] bg-violet-600/20 rounded-full blur-[150px] pointer-events-none -z-10" />
 
-      {/* Top Bar (adheres to Top Bar Contract: 3 zones, single wordmark, clean links, primary action) */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-40">
+      {/* Top Bar */}
+      <header className="flex items-center justify-between px-6 py-3.5 border-b border-cyan-900/40 bg-[#060914]/85 backdrop-blur-md sticky top-0 z-40 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
         {/* Zone 1: Brand Wordmark */}
         <button
           onClick={() => setGameState('TITLE')}
-          className="text-lg font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-400 to-amber-300 hover:opacity-90 transition-opacity"
+          className="text-lg font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-pink-400 to-amber-300 hover:opacity-95 transition-opacity neon-glow-cyan"
         >
           NEON HOCKEY
         </button>

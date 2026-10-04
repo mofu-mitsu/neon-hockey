@@ -131,15 +131,15 @@ export default function ModeSelectModal({
     <div className="w-full max-w-5xl mx-auto px-4 py-6 sm:py-8 space-y-8">
       {/* Title & Introduction */}
       <div className="text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-800/80 text-cyan-400 text-xs font-mono tracking-widest mb-3">
-          ✦ ARCADE ARENA SELECT ✦
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 text-xs font-mono tracking-widest mb-3 neon-box-cyan">
+          ✦ CYBER ARCADE ARENA ✦
         </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-400 to-amber-300 tracking-tight">
+        <h1 className="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-pink-400 to-amber-300 tracking-tight neon-glow-cyan">
           NEON HOCKEY: ARENA
         </h1>
-        <p className="text-slate-300 text-sm mt-2 max-w-xl mx-auto leading-relaxed">
-          1vs1の真剣勝負から、NPCとチームを組む2vs2タッグ戦まで全モード対応！
-          ビリヤードやカーリング、マルチボールなどの多彩なルールで遊ぼう！
+        <p className="text-slate-200 text-sm mt-2 max-w-xl mx-auto leading-relaxed">
+          1vs1の真剣勝負から、NPCとチームを組む白熱の2vs2タッグ戦まで全モード対応！
+          ビリヤードやカーリング、カオスなマルチボールなどの多彩なルールで遊ぼう！
         </p>
       </div>
 

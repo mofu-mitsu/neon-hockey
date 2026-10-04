@@ -461,6 +461,41 @@ export default function CharacterRosterModal({ onClose }: CharacterRosterModalPr
                     </div>
                   </div>
                 )}
+
+                {/* 8. Special Modes: Billiards & Curling */}
+                {(selectedChar.quotes.billiards || selectedChar.quotes.curling) && (
+                  <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div className="font-bold text-amber-400 mb-1.5 flex items-center gap-1.5">
+                      <span>【特殊モード専用ボイス（ビリヤード ＆ カーリング）】</span>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedChar.quotes.billiards && selectedChar.quotes.billiards.length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-[11px] font-semibold text-amber-300/90 flex items-center gap-1">
+                            🎱 ネオンビリヤード:
+                          </p>
+                          {selectedChar.quotes.billiards.map((q, i) => (
+                            <p key={`bil-${i}`} className="text-slate-300 pl-2 border-l border-amber-500/40 leading-relaxed">
+                              「{q}」
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                      {selectedChar.quotes.curling && selectedChar.quotes.curling.length > 0 && (
+                        <div className="space-y-1 pt-1">
+                          <p className="text-[11px] font-semibold text-cyan-300/90 flex items-center gap-1">
+                            🥌 ネオンカーリング:
+                          </p>
+                          {selectedChar.quotes.curling.map((q, i) => (
+                            <p key={`cur-${i}`} className="text-slate-300 pl-2 border-l border-cyan-500/40 leading-relaxed">
+                              「{q}」
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

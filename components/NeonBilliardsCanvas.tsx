@@ -181,18 +181,35 @@ export default function NeonBilliardsCanvas({
     startTime: 0,
   });
 
-  // Speech Helper
+  // Speech Helper - Enhanced with Billiards specific voice lines!
   const triggerSpeech = useCallback(
-    (charId: string, type: 'start' | 'goalScored' | 'goalConceded') => {
+    (charId: string, type: 'start' | 'goalScored' | 'goalConceded' | 'billiards') => {
       const char = GET_CHARACTER_BY_ID(charId);
-      const quotes = char.quotes[type];
-      if (!quotes || quotes.length === 0) return;
-      const quote = quotes[Math.floor(Math.random() * quotes.length)];
+      let pool: string[] = [];
+      if (type === 'billiards') {
+        pool = char.quotes.billiards && char.quotes.billiards.length > 0 ? char.quotes.billiards : (char.quotes.goalScored || []);
+      } else if (type === 'goalScored') {
+        if (char.quotes.billiards && char.quotes.billiards.length > 0 && Math.random() < 0.65) {
+          pool = char.quotes.billiards;
+        } else {
+          pool = char.quotes.goalScored || [];
+        }
+      } else if (type === 'start') {
+        if (char.quotes.billiards && char.quotes.billiards.length > 0 && Math.random() < 0.5) {
+          pool = char.quotes.billiards;
+        } else {
+          pool = char.quotes.start || [];
+        }
+      } else {
+        pool = char.quotes[type] || [];
+      }
+      if (!pool || pool.length === 0) return;
+      const quote = pool[Math.floor(Math.random() * pool.length)];
       onSpeechRef.current({
         id: `speech-${Date.now()}-${Math.random()}`,
         character: char,
         text: quote,
-        timeRemaining: 3200,
+        timeRemaining: 3400,
         isAlly: charId === config.allyId,
       });
     },
