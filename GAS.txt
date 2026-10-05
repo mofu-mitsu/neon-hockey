@@ -1,0 +1,208 @@
+/**
+ * ==============================================================================
+ * NEON HOCKEY: CHARACTER ARENA - プレイログ記録用 Google Apps Script (GAS)
+ * ==============================================================================
+ * 
+ * 【使い方・導入手順】
+ * 1. Google スプレッドシートを新規作成します。
+ * 2. 上部メニューの「拡張機能」>「Apps Script」をクリックしてエディタを開きます。
+ * 3. もともと書いてあるコード（function myFunction()...）を全て消去し、
+ *    このファイルの内容を丸ごと貼り付けます。
+ * 4. 右上の「デプロイ」ボタン >「新しいデプロイ」をクリックします。
+ * 5. 左側の歯車マーク（種類の選択）をクリックし、「ウェブアプリ」を選択します。
+ * 6. 設定を次のように指定します：
+ *      - 説明: 「ネオンホッケー プレイログ v1」など任意
+ *      - 次のユーザーとして実行: 「自分」（Me）
+ *      - アクセスできるユーザー: 「全員」（Anyone） ★超重要！誰でも記録できるようにするため
+ * 7. 「デプロイ」をクリックし、初回のみ「アクセスの承認」を求められたらご自身のGoogleアカウントで承認します。
+ * 8. 発行された「ウェブアプリのURL」（https://script.google.com/macros/s/.../exec）を使用します。
+ * 
+ * ※ヘッダー行（列見出し）は初回送信時に自動でスプレッドシートに生成されます。
+ * ==============================================================================
+ */
+
+// ------------------------------------------------------------------------------
+// 設定項目
+// ------------------------------------------------------------------------------
+// シート名の指定（存在しない場合は自動作成されます）
+const SHEET_NAME = 'プレイログ';
+
+// スプレッドシートID（通常は空文字 '' のままでOK）
+// ※スプレッドシート内の「拡張機能」から開いた場合は自動取得されるため空文字で動きます。
+// ※もし script.google.com からスタンドアロンで作成した場合は、スプレッドシートのURLに含まれるIDを貼り付けてください。
+const SPREADSHEET_ID = '';
+
+// 列ヘッダー定義
+const HEADERS = [
+  '日時',
+  'ゲームモード',
+  '対戦形式',
+  '勝敗結果',
+  'プレイヤー得点',
+  '相手得点',
+  'プレイヤー名',
+  '味方NPC',
+  '対戦相手1',
+  '対戦相手2',
+  '試合時間(秒)',
+  '最長ラリー',
+  '強打スマッシュ',
+  'ターゲット/ストーン',
+  '利用端末'
+];
+
+/**
+ * 対象のスプレッドシートを取得するヘルパー
+ */
+function getTargetSpreadsheet() {
+  if (SPREADSHEET_ID && SPREADSHEET_ID.trim() !== '') {
+    return SpreadsheetApp.openById(SPREADSHEET_ID.trim());
+  }
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (!active) {
+    throw new Error('アクティブなスプレッドシートが見つかりません。SPREADSHEET_ID にスプレッドシートのIDを指定してください。');
+  }
+  return active;
+}
+
+/**
+ * データをシートに1行追加する共通関数
+ */
+function appendRecordToSheet(data) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000); // 同時アクセス時の競合を防ぐため最大10秒待機
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error',
+      message: 'Server busy, lock timeout'
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  try {
+    const ss = getTargetSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEET_NAME);
+    }
+
+    // シートが空ならヘッダー行を書き込み＆装飾
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(HEADERS);
+      const headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
+      headerRange.setBackground('#0f172a'); // サイバーダーク
+      headerRange.setFontColor('#38bdf8'); // ネオンシアン
+      headerRange.setFontWeight('bold');
+      headerRange.setHorizontalAlignment('center');
+      sheet.setFrozenRows(1);
+    }
+
+    // データの組み立て
+    const row = [
+      data.timestamp || Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd HH:mm:ss'),
+      data.mode || '—',
+      data.teamFormat || '—',
+      data.result || '—',
+      data.playerGoals !== undefined ? data.playerGoals : 0,
+      data.opponentGoals !== undefined ? data.opponentGoals : 0,
+      data.playerName || 'あなた',
+      data.allyName || '—',
+      data.opponent1Name || '—',
+      data.opponent2Name || '—',
+      data.matchDurationSec || 0,
+      data.longestRally || 0,
+      data.superSmashes || 0,
+      data.targetsHit || 0,
+      data.device || '—'
+    ];
+
+    sheet.appendRow(row);
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'success',
+      message: 'Logged match data successfully'
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error',
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * WebアプリへPOSTリクエストが届いた時に実行される関数
+ */
+function doPost(e) {
+  try {
+    let data;
+    if (e && e.postData && e.postData.contents) {
+      data = JSON.parse(e.postData.contents);
+    } else if (e && e.parameter) {
+      data = e.parameter;
+    } else {
+      data = {};
+    }
+    return appendRecordToSheet(data);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error',
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * ブラウザでURLを直接開いた時やGETビーコンを受信した時の関数
+ */
+function doGet(e) {
+  // GETパラメータ経由のロギング対応
+  if (e && e.parameter && e.parameter.payload) {
+    try {
+      const data = JSON.parse(e.parameter.payload);
+      return appendRecordToSheet(data);
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'error',
+        message: err.toString()
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  return ContentService.createTextOutput(
+    '🎮 NEON HOCKEY: CHARACTER ARENA プレイログ記録用 GAS Web App は正常に稼働しています！'
+  ).setMimeType(ContentService.MimeType.TEXT);
+}
+
+/**
+ * エディタから手動テストするための関数（「実行」ボタンで動作確認できます）
+ */
+function testLog() {
+  const dummyEvent = {
+    postData: {
+      contents: JSON.stringify({
+        timestamp: Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd HH:mm:ss'),
+        mode: '1v1',
+        teamFormat: '1vs1',
+        result: 'VICTORY',
+        playerGoals: 5,
+        opponentGoals: 3,
+        playerName: 'テストプレイヤー',
+        allyName: '—',
+        opponent1Name: 'ゆたか',
+        opponent2Name: '—',
+        matchDurationSec: 42,
+        longestRally: 14,
+        superSmashes: 3,
+        targetsHit: 2,
+        device: 'PC'
+      })
+    }
+  };
+  const res = doPost(dummyEvent);
+  Logger.log(res.getContent());
+}

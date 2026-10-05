@@ -12,14 +12,34 @@ import NeonBilliardsCanvas from '@/components/NeonBilliardsCanvas';
 import NeonCurlingCanvas from '@/components/NeonCurlingCanvas';
 import GameHUD from '@/components/GameHUD';
 import SpeechOverlay from '@/components/SpeechOverlay';
+import CyberPortalDrawer from '@/components/CyberPortalDrawer';
 import { preloadCharacterImages } from '@/lib/imageCache';
-import { Sparkles, Trophy, BookOpen, RotateCcw, Play, Swords } from 'lucide-react';
+import { logMatchToGAS } from '@/lib/gasLogger';
+import {
+  Sparkles,
+  Trophy,
+  BookOpen,
+  RotateCcw,
+  Play,
+  Swords,
+  Menu,
+  Home as HomeIcon,
+  ChevronRight,
+} from 'lucide-react';
 
 export default function HomePage() {
   // Navigation & Game State Machine
   const [gameState, setGameState] = useState<GameState>('TITLE');
   const [selectedTeamFormat, setSelectedTeamFormat] = useState<TeamFormat>('2v2');
   const [selectedMode, setSelectedMode] = useState<GameMode>('classic');
+  const [isPortalDrawerOpen, setIsPortalDrawerOpen] = useState(false);
+
+  // Automatically scroll to top whenever game state changes (Mode Select -> Match Setup, Setup -> Playing, etc.)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [gameState]);
 
   // Preload all character PNG images on app start
   useEffect(() => {
@@ -90,12 +110,21 @@ export default function HomePage() {
     setOpponentScore(oScore);
   };
 
+  // Auto-scroll window to top on gameState changes (Title, Setup, Playing, GameOver)
+  // Ensures DOUBLE_PUCK status, HUD, and arena top are always in clear view!
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [gameState]);
+
   // Match Completed Handler
   const handleMatchComplete = useCallback((stats: MatchStats, won: boolean) => {
     setMatchStats(stats);
     setMatchWon(won);
     setGameState('GAMEOVER');
-  }, []);
+    logMatchToGAS(matchConfig, stats, won);
+  }, [matchConfig]);
 
   // Start Match
   const handleStartMatch = (config: MatchConfig) => {
@@ -105,6 +134,12 @@ export default function HomePage() {
     setIsPaused(false);
     setCurrentSpeech(null);
     setGameState('PLAYING');
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      });
+    }
   };
 
   // Rematch
@@ -114,6 +149,9 @@ export default function HomePage() {
     setIsPaused(false);
     setCurrentSpeech(null);
     setGameState('PLAYING');
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
   };
 
   // Toggle goal countdown tempo setting dynamically
@@ -166,26 +204,66 @@ export default function HomePage() {
           </button>
         </nav>
 
-        {/* Zone 3: Primary Action */}
-        <div className="flex items-center gap-3">
+        {/* Zone 3: Primary Action & Hamburger Portal Menu */}
+        <div className="flex items-center gap-2 sm:gap-3">
           {gameState === 'PLAYING' ? (
             <button
               onClick={() => setGameState('SETUP')}
-              className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 bg-slate-900 border border-slate-700 rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap"
+              className="px-3 py-1.5 text-xs font-semibold text-slate-300 bg-slate-900 border border-slate-700 rounded-lg hover:bg-slate-800 transition-colors whitespace-nowrap cursor-pointer"
             >
               設定へ戻る
             </button>
           ) : (
             <button
               onClick={() => setIsRosterOpen(true)}
-              className="px-3.5 py-1.5 text-xs font-semibold text-cyan-300 bg-cyan-950/70 border border-cyan-800/80 rounded-lg hover:bg-cyan-900/60 transition-colors whitespace-nowrap flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs font-semibold text-cyan-300 bg-cyan-950/70 border border-cyan-800/80 rounded-lg hover:bg-cyan-900/60 transition-colors whitespace-nowrap hidden sm:flex items-center gap-1.5 cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>全18キャラ一覧</span>
             </button>
           )}
+
+          {/* Hamburger Portal Menu Toggle Button */}
+          <button
+            onClick={() => setIsPortalDrawerOpen(true)}
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-900/90 hover:bg-cyan-950/80 border border-slate-700 hover:border-cyan-500/60 text-slate-300 hover:text-cyan-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            aria-label="関連リンクメニューを開く"
+            title="ポータル・関連ゲームメニュー"
+          >
+            <Menu className="w-4 h-4 text-cyan-400" />
+            <span className="text-xs font-bold hidden sm:inline">MENU</span>
+          </button>
         </div>
       </header>
+
+      {/* Cyber Breadcrumbs Navigation Bar */}
+      <div className="w-full px-4 sm:px-6 py-2 border-b border-cyan-900/30 bg-[#040612]/75 backdrop-blur-sm text-xs flex items-center gap-1.5 text-slate-400 font-mono overflow-x-auto shadow-sm">
+        <a
+          href="https://mofu-mitsu.github.io/"
+          className="hover:text-cyan-300 transition-colors flex items-center gap-1 shrink-0 group"
+          title="ポータル ホームへ戻る"
+        >
+          <HomeIcon className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+          <span className="group-hover:underline">ホーム</span>
+        </a>
+        <ChevronRight className="w-3 h-3 text-slate-600 shrink-0" />
+        <button
+          onClick={() => setGameState('TITLE')}
+          className="hover:text-cyan-300 transition-colors shrink-0 text-slate-300 cursor-pointer"
+        >
+          NEON HOCKEY
+        </button>
+        <ChevronRight className="w-3 h-3 text-slate-600 shrink-0" />
+        <span className="text-cyan-400 font-bold shrink-0">
+          {gameState === 'TITLE'
+            ? 'モード選択'
+            : gameState === 'SETUP'
+            ? '対戦セットアップ'
+            : gameState === 'PLAYING'
+            ? '試合中'
+            : '試合結果'}
+        </span>
+      </div>
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col justify-center items-center py-1 sm:py-3 px-2 sm:px-4 max-w-full overflow-x-hidden">
@@ -344,6 +422,14 @@ export default function HomePage() {
       {isHowToPlayOpen && (
         <HowToPlayModal onClose={() => setIsHowToPlayOpen(false)} />
       )}
+
+      {/* Cyber Portal Hamburger Menu Drawer */}
+      <CyberPortalDrawer
+        isOpen={isPortalDrawerOpen}
+        onClose={() => setIsPortalDrawerOpen(false)}
+        onOpenRoster={() => setIsRosterOpen(true)}
+        onOpenHowToPlay={() => setIsHowToPlayOpen(true)}
+      />
 
       {/* Footer */}
       <footer className="py-4 px-6 border-t border-slate-900 text-center text-xs text-slate-600">

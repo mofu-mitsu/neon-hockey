@@ -33,6 +33,7 @@ export interface CharacterQuotes {
   defeat?: string[];
   billiards?: string[];
   curling?: string[];
+  draw?: string[];
 }
 
 export interface Character {

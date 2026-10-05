@@ -124,6 +124,11 @@ export default function MatchSetupModal({
       difficulty: 'normal',
       goalCountdown,
     };
+    // Immediately scroll window to top so arena header, HUD, and DOUBLE_PUCK SETUP are in clear view
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+
     onStartMatch(finalConfig);
   };
 

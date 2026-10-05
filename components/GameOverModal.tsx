@@ -94,27 +94,29 @@ async function drawResultCardCanvas(
   const ctx = canvas.getContext('2d');
   if (!ctx) return '';
 
+  const isDraw = stats.playerGoals === stats.opponentGoals;
+
   // 2. Rich cyber neon gradient background
   const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-  bgGrad.addColorStop(0, won ? '#141838' : '#280f24');
+  bgGrad.addColorStop(0, isDraw ? '#2d2208' : (won ? '#141838' : '#280f24'));
   bgGrad.addColorStop(0.3, '#0e1224');
   bgGrad.addColorStop(0.7, '#070b16');
-  bgGrad.addColorStop(1, won ? '#062033' : '#1b0c16');
+  bgGrad.addColorStop(1, isDraw ? '#1f1604' : (won ? '#062033' : '#1b0c16'));
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
   // 3. Ambient neon glow
   const glow = ctx.createRadialGradient(W / 2, 130, 20, W / 2, 130, 360);
-  glow.addColorStop(0, won ? 'rgba(6, 182, 212, 0.28)' : 'rgba(244, 63, 94, 0.28)');
+  glow.addColorStop(0, isDraw ? 'rgba(234, 179, 8, 0.28)' : (won ? 'rgba(6, 182, 212, 0.28)' : 'rgba(244, 63, 94, 0.28)'));
   glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, 420);
 
   // 4. Glowing neon outer border
   ctx.save();
-  ctx.strokeStyle = won ? '#06b6d4' : '#f43f5e';
+  ctx.strokeStyle = isDraw ? '#eab308' : (won ? '#06b6d4' : '#f43f5e');
   ctx.lineWidth = 4;
-  ctx.shadowColor = won ? 'rgba(6, 182, 212, 0.8)' : 'rgba(244, 63, 94, 0.8)';
+  ctx.shadowColor = isDraw ? 'rgba(234, 179, 8, 0.8)' : (won ? 'rgba(6, 182, 212, 0.8)' : 'rgba(244, 63, 94, 0.8)');
   ctx.shadowBlur = 24;
   ctx.beginPath();
   ctx.roundRect(24, 24, W - 48, H - 48, 24);
@@ -129,10 +131,10 @@ async function drawResultCardCanvas(
   ctx.fillText('NEON HOCKEY: CHARACTER ARENA', W / 2, 75);
 
   ctx.font = '900 46px sans-serif';
-  ctx.fillStyle = won ? '#38bdf8' : '#fb7185';
-  ctx.shadowColor = won ? 'rgba(56, 189, 248, 0.8)' : 'rgba(251, 113, 133, 0.8)';
+  ctx.fillStyle = isDraw ? '#facc15' : (won ? '#38bdf8' : '#fb7185');
+  ctx.shadowColor = isDraw ? 'rgba(250, 204, 21, 0.8)' : (won ? 'rgba(56, 189, 248, 0.8)' : 'rgba(251, 113, 133, 0.8)');
   ctx.shadowBlur = 18;
-  ctx.fillText(won ? 'VICTORY MATCH!' : 'GAME OVER', W / 2, 128);
+  ctx.fillText(isDraw ? 'DRAW MATCH!' : (won ? 'VICTORY MATCH!' : 'GAME OVER'), W / 2, 128);
   ctx.restore();
 
   ctx.save();
@@ -140,7 +142,9 @@ async function drawResultCardCanvas(
   ctx.font = 'bold 18px sans-serif';
   ctx.fillStyle = '#cbd5e1';
   ctx.fillText(
-    won ? `${config.playerName || 'あなた'} チームの完全勝利！` : '激闘！次こそリベンジを果たそう！',
+    isDraw
+      ? '引き分け！互角の白熱バトル！'
+      : (won ? `${config.playerName || 'あなた'} チームの完全勝利！` : '激闘！次こそリベンジを果たそう！'),
     W / 2,
     164
   );
@@ -279,15 +283,35 @@ async function drawResultCardCanvas(
       ctx.fillText(d.char.avatarEmoji.slice(0, 2), avX, avY + 9);
     }
 
-    // Name & role
+    // Name
     ctx.textAlign = 'left';
     ctx.font = 'bold 23px sans-serif';
     ctx.fillStyle = '#f8fafc';
     ctx.fillText(d.char.name, 155, curY + 38);
 
+    // Stylized pill badge positioned on the FAR RIGHT of the card (W - 120 card width)
+    // Completely separated from character name by over 450px so they NEVER overlap!
+    const roleText = d.role === 'ally' ? '味方タッグ' : '対戦相手';
     ctx.font = 'bold 13px sans-serif';
+    const badgeTextWidth = ctx.measureText(roleText).width;
+    const badgeW = Math.max(76, badgeTextWidth + 18);
+    const badgeH = 24;
+    const cardRight = W - 60; // 840
+    const badgeX = cardRight - badgeW - 16;
+    const badgeY = curY + 20;
+
+    ctx.fillStyle = d.role === 'ally' ? 'rgba(6, 182, 212, 0.25)' : 'rgba(244, 63, 94, 0.25)';
+    ctx.strokeStyle = d.role === 'ally' ? 'rgba(6, 182, 212, 0.8)' : 'rgba(244, 63, 94, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 12);
+    ctx.fill();
+    ctx.stroke();
+
     ctx.fillStyle = d.role === 'ally' ? '#38bdf8' : '#fb7185';
-    ctx.fillText(d.role === 'ally' ? '[味方タッグ]' : '[対戦相手]', 155 + ctx.measureText(d.char.name).width + 12, curY + 36);
+    ctx.textAlign = 'center';
+    ctx.fillText(roleText, badgeX + badgeW / 2, badgeY + 16.5);
+    ctx.textAlign = 'left';
 
     ctx.font = '14px sans-serif';
     ctx.fillStyle = '#94a3b8';
@@ -295,7 +319,14 @@ async function drawResultCardCanvas(
 
     ctx.font = 'italic 16px sans-serif';
     ctx.fillStyle = '#e2e8f0';
-    const quoteText = `「${d.quote}」`;
+    let quoteText = `「${d.quote}」`;
+    const maxQuoteW = W - 120 - 125;
+    if (ctx.measureText(quoteText).width > maxQuoteW) {
+      while (quoteText.length > 6 && ctx.measureText(quoteText + '…」').width > maxQuoteW) {
+        quoteText = quoteText.slice(0, -1);
+      }
+      quoteText = quoteText + '…」';
+    }
     ctx.fillText(quoteText, 155, curY + 92);
 
     ctx.restore();
@@ -397,22 +428,36 @@ export default function GameOverModal({
   const [imageDataUrl, setImageDataUrl] = useState<string>('');
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
+  const is2v2 = config.teamFormat === '2v2' || config.mode === '2v2';
+  const isDraw = stats.playerGoals === stats.opponentGoals;
+
   useEffect(() => {
-    if (won) {
+    if (isDraw) {
+      sound.playDraw();
+    } else if (won) {
       sound.playWin();
     } else {
       sound.playLose();
     }
-  }, [won]);
+  }, [won, isDraw]);
 
-  const is2v2 = config.teamFormat === '2v2' || config.mode === '2v2';
-
-  // Determine post-match dialogue based on match result (who won vs lost)
+  // Determine post-match dialogue based on match result (victory, defeat, or draw)
   const dialogueQuotes = useMemo(() => {
     const getQuote = (arr?: string[], seed = 0) => {
       if (!arr || arr.length === 0) return '…！';
       const hash = Math.abs(stats.playerGoals * 11 + stats.opponentGoals * 17 + stats.longestRally * 5 + seed);
       return arr[hash % arr.length];
+    };
+
+    const getCharQuote = (char: Character, role: 'ally' | 'opponent', seed: number) => {
+      if (isDraw && char.quotes.draw && char.quotes.draw.length > 0) {
+        return getQuote(char.quotes.draw, seed);
+      }
+      if (won) {
+        return role === 'ally' ? getQuote(char.quotes.victory, seed) : getQuote(char.quotes.defeat, seed);
+      } else {
+        return role === 'ally' ? getQuote(char.quotes.defeat, seed) : getQuote(char.quotes.victory, seed);
+      }
     };
 
     const list: { char: Character; role: 'ally' | 'opponent'; quote: string }[] = [];
@@ -423,7 +468,7 @@ export default function GameOverModal({
       list.push({
         char: ally,
         role: 'ally',
-        quote: won ? getQuote(ally.quotes.victory, 1) : getQuote(ally.quotes.defeat, 1),
+        quote: getCharQuote(ally, 'ally', 1),
       });
     }
 
@@ -433,7 +478,7 @@ export default function GameOverModal({
       list.push({
         char: opp1,
         role: 'opponent',
-        quote: won ? getQuote(opp1.quotes.defeat, 2) : getQuote(opp1.quotes.victory, 2),
+        quote: getCharQuote(opp1, 'opponent', 2),
       });
     }
 
@@ -443,12 +488,12 @@ export default function GameOverModal({
       list.push({
         char: opp2,
         role: 'opponent',
-        quote: won ? getQuote(opp2.quotes.defeat, 3) : getQuote(opp2.quotes.victory, 3),
+        quote: getCharQuote(opp2, 'opponent', 3),
       });
     }
 
     return list;
-  }, [config, is2v2, stats, won]);
+  }, [config, is2v2, isDraw, stats, won]);
 
   // Handle Share Navigation
   const handleShare = async () => {
@@ -516,7 +561,9 @@ export default function GameOverModal({
           {/* Top Glow Ribbon */}
           <div
             className={`h-1.5 w-full shrink-0 ${
-              won
+              isDraw
+                ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.8)]'
+                : won
                 ? 'bg-gradient-to-r from-cyan-400 via-emerald-400 to-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.8)]'
                 : 'bg-gradient-to-r from-rose-500 via-amber-500 to-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.8)]'
             }`}
@@ -524,14 +571,22 @@ export default function GameOverModal({
 
           {/* Scrollable Modal Body */}
           <div className="overflow-y-auto overscroll-contain px-5 py-5 sm:p-6 space-y-4 flex-1">
-            {/* Victory / Defeat Header */}
+            {/* Victory / Defeat / Draw Header */}
             <div className="text-center">
               <div
                 className="inline-flex p-3 rounded-2xl mb-2.5 shadow-lg border"
                 style={{
-                  backgroundColor: won ? 'rgba(6, 182, 212, 0.15)' : 'rgba(244, 63, 94, 0.15)',
-                  borderColor: won ? 'rgba(6, 182, 212, 0.4)' : 'rgba(244, 63, 94, 0.4)',
-                  color: won ? '#38bdf8' : '#fb7185',
+                  backgroundColor: isDraw
+                    ? 'rgba(245, 158, 11, 0.15)'
+                    : won
+                    ? 'rgba(6, 182, 212, 0.15)'
+                    : 'rgba(244, 63, 94, 0.15)',
+                  borderColor: isDraw
+                    ? 'rgba(245, 158, 11, 0.4)'
+                    : won
+                    ? 'rgba(6, 182, 212, 0.4)'
+                    : 'rgba(244, 63, 94, 0.4)',
+                  color: isDraw ? '#fbbf24' : won ? '#38bdf8' : '#fb7185',
                 }}
               >
                 <Trophy className="w-8 h-8" />
@@ -539,15 +594,19 @@ export default function GameOverModal({
 
               <h2
                 className={`text-2xl sm:text-3xl font-black tracking-tight ${
-                  won
+                  isDraw
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-400 drop-shadow-[0_0_15px_rgba(245,158,11,0.6)]'
+                    : won
                     ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-emerald-300 to-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.6)]'
                     : 'text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-300 drop-shadow-[0_0_15px_rgba(244,63,94,0.6)]'
                 }`}
               >
-                {won ? 'VICTORY MATCH!' : 'GAME OVER'}
+                {isDraw ? 'DRAW MATCH!' : won ? 'VICTORY MATCH!' : 'GAME OVER'}
               </h2>
               <p className="text-xs text-slate-300 mt-1 font-medium">
-                {won
+                {isDraw
+                  ? '引き分け！互角の白熱バトルでした！'
+                  : won
                   ? `${config.playerName || 'あなた'}のチームが勝利しました！`
                   : '惜しい！次はリベンジを果たそう！'}
               </p>

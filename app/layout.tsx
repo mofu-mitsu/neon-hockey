@@ -42,6 +42,9 @@ export const metadata: Metadata = {
   authors: [{ name: 'NEON HOCKEY Production' }],
   creator: 'NEON HOCKEY Production',
   publisher: 'NEON HOCKEY Production',
+  verification: {
+    google: 'b7ayC_ApkqZfpMCdnvnmZPQtpDMW8FATSpv0q1T2uV4',
+  },
   robots: {
     index: true,
     follow: true,
@@ -90,7 +93,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // Schema.org structured data (WebApplication / VideoGame)
-  const jsonLd = {
+  const gameJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'VideoGame',
     name: 'NEON HOCKEY: CHARACTER ARENA',
@@ -110,9 +113,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     image: `${APP_URL}/ogp.png`,
   };
 
+  // Schema.org BreadcrumbList structured data
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'ホーム',
+        item: 'https://mofu-mitsu.github.io/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'NEON HOCKEY: CHARACTER ARENA',
+        item: APP_URL,
+      },
+    ],
+  };
+
   return (
     <html lang="ja">
       <head>
+        {/* Google Search Console verification meta */}
+        <meta
+          name="google-site-verification"
+          content="b7ayC_ApkqZfpMCdnvnmZPQtpDMW8FATSpv0q1T2uV4"
+        />
+
         {/* Google Analytics ※全ページ共通計測タグ */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-GNTX973GET"
@@ -130,7 +159,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Structured Data (JSON-LD) for SEO */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(gameJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
       </head>
       <body suppressHydrationWarning className="bg-[#02030a] text-slate-100 antialiased selection:bg-cyan-500/30">

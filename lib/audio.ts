@@ -344,6 +344,36 @@ class SoundEngine {
     }
   }
 
+  public playDraw() {
+    if (this.isMuted) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      // Harmonious, bright balanced draw chord (F# -> A -> C# -> E)
+      const chord = [369.99, 440.0, 554.37, 659.25];
+      chord.forEach((freq, idx) => {
+        const osc = this.ctx!.createOscillator();
+        const gain = this.ctx!.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+
+        gain.gain.setValueAtTime(0.18, now + idx * 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.55);
+
+        osc.connect(gain);
+        gain.connect(this.ctx!.destination);
+
+        osc.start(now + idx * 0.09);
+        osc.stop(now + idx * 0.09 + 0.55);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
   public playLose() {
     if (this.isMuted) return;
     this.initContext();

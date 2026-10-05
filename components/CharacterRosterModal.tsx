@@ -441,11 +441,11 @@ export default function CharacterRosterModal({ onClose }: CharacterRosterModalPr
                   </div>
                 )}
 
-                {/* 7. Victory & Defeat */}
-                {(selectedChar.quotes.victory || selectedChar.quotes.defeat) && (
+                {/* 7. Victory, Defeat & Draw */}
+                {(selectedChar.quotes.victory || selectedChar.quotes.defeat || selectedChar.quotes.draw) && (
                   <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
                     <div className="font-bold text-sky-400 mb-1.5 flex items-center gap-1.5">
-                      <span>【試合決着時（勝敗）】</span>
+                      <span>【試合決着時（勝敗・引き分け）】</span>
                     </div>
                     <div className="space-y-1">
                       {selectedChar.quotes.victory?.map((q, i) => (
@@ -456,6 +456,11 @@ export default function CharacterRosterModal({ onClose }: CharacterRosterModalPr
                       {selectedChar.quotes.defeat?.map((q, i) => (
                         <p key={`d-${i}`} className="text-slate-300 pl-2 border-l border-rose-500/40 leading-relaxed">
                           💧 敗北: 「{q}」
+                        </p>
+                      ))}
+                      {selectedChar.quotes.draw?.map((q, i) => (
+                        <p key={`dr-${i}`} className="text-slate-300 pl-2 border-l border-amber-500/40 leading-relaxed">
+                          ⚖️ 引き分け: 「{q}」
                         </p>
                       ))}
                     </div>

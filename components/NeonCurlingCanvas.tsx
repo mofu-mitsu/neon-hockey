@@ -164,12 +164,16 @@ export default function NeonCurlingCanvas({
     startTime: 0,
   });
 
-  // Trigger speech helper - Enhanced with Curling specific voice lines!
+  // Trigger speech helper - Enhanced with Curling specific and Draw voice lines!
   const triggerSpeech = useCallback(
-    (charId: string, type: 'start' | 'goalScored' | 'goalConceded' | 'curling') => {
+    (charId: string, type: 'start' | 'goalScored' | 'goalConceded' | 'curling' | 'draw') => {
       const char = GET_CHARACTER_BY_ID(charId);
       let pool: string[] = [];
-      if (type === 'curling') {
+      if (type === 'draw') {
+        pool = (char.quotes.draw && char.quotes.draw.length > 0)
+          ? char.quotes.draw
+          : ['引き分けか…！いい勝負だったね！', '互角の勝負…！次は決着つけよう！'];
+      } else if (type === 'curling') {
         pool = char.quotes.curling && char.quotes.curling.length > 0 ? char.quotes.curling : (char.quotes.goalScored || []);
       } else if (type === 'goalScored') {
         if (char.quotes.curling && char.quotes.curling.length > 0 && Math.random() < 0.65) {
@@ -270,7 +274,9 @@ export default function NeonCurlingCanvas({
     let winnerIsPlayer = false;
 
     if (inHouse.length === 0) {
-      bannerRef.current = { text: 'BLANK END (両チーム ハウス外)', color: '#94a3b8', timer: 100 };
+      bannerRef.current = { text: 'BLANK END (両者同点引き分け！)', color: '#fbbf24', timer: 110 };
+      if (is2v2 && config.allyId) triggerSpeech(config.allyId, 'draw');
+      triggerSpeech(config.opponent1Id, 'draw');
     } else {
       const winner = inHouse[0];
       winnerIsPlayer = winner.isPlayerTeam;
@@ -314,8 +320,15 @@ export default function NeonCurlingCanvas({
     setTimeout(() => {
       const pFinal = scoresRef.current.player;
       const oFinal = scoresRef.current.opponent;
-      const won = pFinal >= oFinal;
+      const isDraw = pFinal === oFinal;
+      const won = pFinal > oFinal;
       const matchDurationSec = Math.max(1, Math.floor((Date.now() - statsRef.current.startTime) / 1000));
+
+      // Trigger draw speeches if match ended in a tie
+      if (isDraw) {
+        if (is2v2 && config.allyId) triggerSpeech(config.allyId, 'draw');
+        triggerSpeech(config.opponent1Id, 'draw');
+      }
 
       onMatchComplete(
         {
@@ -327,8 +340,8 @@ export default function NeonCurlingCanvas({
           longestRally: 0,
           currentRally: 0,
           matchDurationSec,
-          mvpName: won ? (config.playerName || 'あなた') : GET_CHARACTER_BY_ID(config.opponent1Id).name,
-          mvpColor: won ? (config.playerColor || '#06b6d4') : GET_CHARACTER_BY_ID(config.opponent1Id).themeColor,
+          mvpName: isDraw ? 'DRAW (同点)' : (won ? (config.playerName || 'あなた') : GET_CHARACTER_BY_ID(config.opponent1Id).name),
+          mvpColor: isDraw ? '#fbbf24' : (won ? (config.playerColor || '#06b6d4') : GET_CHARACTER_BY_ID(config.opponent1Id).themeColor),
         },
         won
       );
